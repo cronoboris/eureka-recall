@@ -4,6 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
+from eureka_recall.config import load_config, load_eurekaignore, write_default_config
 from eureka_recall.core import (
     activate,
     build_agent_command,
@@ -19,26 +20,33 @@ def main() -> None:
     parser = argparse.ArgumentParser(prog="eureka")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
+    init_parser = subparsers.add_parser("init", help="create a starter eureka.toml")
+    init_parser.add_argument("--cwd", default=".")
+    init_parser.add_argument("--config", default="eureka.toml")
+
     activate_parser = subparsers.add_parser("activate", help="select read-only context cards")
     activate_parser.add_argument("--message", required=True)
-    activate_parser.add_argument("--cwd", default=".")
+    activate_parser.add_argument("--cwd")
     activate_parser.add_argument("--localwiki-root")
-    activate_parser.add_argument("--max-cards", type=int, default=8)
+    activate_parser.add_argument("--max-cards", type=int)
     activate_parser.add_argument("--out", default=".eureka")
+    activate_parser.add_argument("--config")
 
     wrap_parser = subparsers.add_parser("wrap", help="build a harness-ready agent input file")
     wrap_parser.add_argument("--message", required=True)
-    wrap_parser.add_argument("--cwd", default=".")
+    wrap_parser.add_argument("--cwd")
     wrap_parser.add_argument("--localwiki-root")
-    wrap_parser.add_argument("--max-cards", type=int, default=8)
+    wrap_parser.add_argument("--max-cards", type=int)
     wrap_parser.add_argument("--out", default=".eureka")
+    wrap_parser.add_argument("--config")
 
     run_parser = subparsers.add_parser("run", help="build context and run an agent command")
     run_parser.add_argument("--message", required=True)
-    run_parser.add_argument("--cwd", default=".")
+    run_parser.add_argument("--cwd")
     run_parser.add_argument("--localwiki-root")
-    run_parser.add_argument("--max-cards", type=int, default=8)
+    run_parser.add_argument("--max-cards", type=int)
     run_parser.add_argument("--out", default=".eureka")
+    run_parser.add_argument("--config")
     run_parser.add_argument(
         "--agent-cmd",
         required=True,
@@ -47,10 +55,11 @@ def main() -> None:
 
     codex_parser = subparsers.add_parser("codex", help="build context and run Codex CLI")
     codex_parser.add_argument("--message", required=True)
-    codex_parser.add_argument("--cwd", default=".")
+    codex_parser.add_argument("--cwd")
     codex_parser.add_argument("--localwiki-root")
-    codex_parser.add_argument("--max-cards", type=int, default=8)
+    codex_parser.add_argument("--max-cards", type=int)
     codex_parser.add_argument("--out", default=".eureka")
+    codex_parser.add_argument("--config")
     codex_parser.add_argument("--codex-bin", default="codex")
     codex_parser.add_argument("--mode", choices=["exec"], default="exec")
     codex_parser.add_argument("--codex-arg", action="append", default=[])
@@ -60,19 +69,21 @@ def main() -> None:
     inspect_parser.add_argument("--out", default=".eureka")
 
     args = parser.parse_args()
+    if args.command == "init":
+        cwd = Path(args.cwd).expanduser().resolve()
+        path = Path(args.config).expanduser()
+        if not path.is_absolute():
+            path = cwd / path
+        write_default_config(path)
+        print(f"Wrote {path}")
+        return
+
     if args.command == "inspect":
         print(render_inspection(Path(args.out).expanduser().resolve()), end="")
         return
 
     if args.command in {"activate", "wrap", "run", "codex"}:
-        request = ActivationRequest(
-            message=args.message,
-            cwd=Path(args.cwd).expanduser().resolve(),
-            localwiki_root=Path(args.localwiki_root).expanduser().resolve()
-            if args.localwiki_root
-            else None,
-            max_cards=args.max_cards,
-        )
+        request = build_request(args)
         result = activate(request)
         out = Path(args.out).expanduser().resolve()
         write_activation_outputs(result, out)
@@ -120,6 +131,43 @@ def write_agent_input(result: ActivationResult, message: str, out: Path) -> Path
     path = out / "agent_input.md"
     path.write_text(agent_input, encoding="utf-8")
     return path
+
+
+def build_request(args: argparse.Namespace) -> ActivationRequest:
+    config_path = Path(args.config).expanduser().resolve() if args.config else None
+    if args.cwd:
+        base_cwd = Path(args.cwd).expanduser().resolve()
+    elif config_path:
+        base_cwd = config_path.parent
+    else:
+        base_cwd = Path(".").resolve()
+    config = load_config(config_path, base_cwd)
+    cwd = base_cwd
+    if args.cwd is None and config.workspace.root:
+        cwd = _resolve_optional_path(config.workspace.root, base_cwd) or base_cwd
+    localwiki_root = _resolve_optional_path(args.localwiki_root, cwd)
+    if localwiki_root is None and config.localwiki.enabled and config.localwiki.root:
+        localwiki_root = _resolve_optional_path(config.localwiki.root, cwd)
+    exclude_globs = [*config.workspace.exclude, *load_eurekaignore(cwd)]
+    return ActivationRequest(
+        message=args.message,
+        cwd=cwd,
+        localwiki_root=localwiki_root,
+        max_cards=args.max_cards if args.max_cards is not None else config.max_cards,
+        include_globs=config.workspace.include,
+        exclude_globs=exclude_globs,
+        max_file_bytes=config.workspace.max_file_bytes,
+        workspace_enabled=config.workspace.enabled,
+    )
+
+
+def _resolve_optional_path(value: str | None, cwd: Path) -> Path | None:
+    if not value:
+        return None
+    path = Path(value).expanduser()
+    if not path.is_absolute():
+        path = cwd / path
+    return path.resolve()
 
 
 if __name__ == "__main__":

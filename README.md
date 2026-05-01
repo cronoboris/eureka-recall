@@ -38,6 +38,14 @@ Memory management belongs to your existing systems and human or agent curators. 
 
 ## Early CLI
 
+Create a starter config:
+
+```bash
+eureka init --cwd /path/to/project
+```
+
+See [docs/configuration.md](docs/configuration.md) for `eureka.toml` and `.eurekaignore`.
+
 ```bash
 eureka activate \
   --message "Refactor the auth middleware according to current project rules" \
@@ -122,5 +130,6 @@ This repository is an initial scaffold. The first implementation focuses on:
 - context card output
 - harness-ready prompt output
 - traceable CLI
+- project config and ignore support
 
 See [ROADMAP.md](ROADMAP.md) for the path from scaffold to a stable developer product.

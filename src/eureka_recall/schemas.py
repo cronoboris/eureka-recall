@@ -11,6 +11,10 @@ class ActivationRequest:
     cwd: Path
     localwiki_root: Path | None = None
     max_cards: int = 8
+    include_globs: list[str] = field(default_factory=list)
+    exclude_globs: list[str] = field(default_factory=list)
+    max_file_bytes: int = 262_144
+    workspace_enabled: bool = True
 
 
 @dataclass(frozen=True)

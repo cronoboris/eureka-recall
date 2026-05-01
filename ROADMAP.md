@@ -26,9 +26,9 @@ That means it can select relevant context from existing stores, explain why it s
 
 ## v0.2: Project Configuration And Safety
 
-- `eureka init` to create `eureka.toml`.
-- `.eurekaignore` support.
-- Default ignores for dependency, build, cache, VCS, and Eureka output folders.
+- `eureka init` to create `eureka.toml`. (initial support)
+- `.eurekaignore` support. (initial support)
+- Default ignores for dependency, build, cache, VCS, and Eureka output folders. (initial support)
 - File size limits and safer binary detection.
 - Card content escaping for harness payloads.
 - Secret redaction for common token, key, and password patterns.

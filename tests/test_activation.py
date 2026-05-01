@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from eureka_recall.config import load_config, load_eurekaignore, parse_minimal_toml, write_default_config
 from eureka_recall.core import activate, build_agent_command, build_codex_command, render_agent_input
 from eureka_recall.inspect import render_inspection_data
 from eureka_recall.schemas import ActivationRequest
@@ -205,3 +206,99 @@ def test_extract_terms_splits_camel_case() -> None:
     assert "session" in terms
     assert "summary" in terms
     assert "evidence" in terms
+
+
+def test_config_loads_workspace_and_localwiki_settings(tmp_path: Path) -> None:
+    config_path = tmp_path / "eureka.toml"
+    config_path.write_text(
+        """
+[activation]
+max_cards = 3
+
+[sources.workspace]
+include = ["**/*.md"]
+exclude = ["secret/**"]
+max_file_bytes = 123
+
+[sources.localwiki]
+enabled = true
+root = "../localwiki"
+""",
+        encoding="utf-8",
+    )
+
+    config = load_config(config_path, tmp_path)
+
+    assert config.max_cards == 3
+    assert config.workspace.include == ["**/*.md"]
+    assert config.workspace.exclude == ["secret/**"]
+    assert config.workspace.max_file_bytes == 123
+    assert config.localwiki.enabled
+    assert config.localwiki.root == "../localwiki"
+
+
+def test_write_default_config_refuses_to_overwrite(tmp_path: Path) -> None:
+    config_path = tmp_path / "eureka.toml"
+    write_default_config(config_path)
+
+    assert "sources.workspace" in config_path.read_text(encoding="utf-8")
+    try:
+        write_default_config(config_path)
+    except FileExistsError:
+        pass
+    else:
+        raise AssertionError("expected FileExistsError")
+
+
+def test_eurekaignore_ignores_comments_and_blank_lines(tmp_path: Path) -> None:
+    (tmp_path / ".eurekaignore").write_text("\n# comment\nsecrets/**\n\n", encoding="utf-8")
+
+    assert load_eurekaignore(tmp_path) == ["secrets/**"]
+
+
+def test_minimal_toml_parser_supports_project_config() -> None:
+    data = parse_minimal_toml(
+        """
+[activation]
+max_cards = 3
+
+[sources.workspace]
+enabled = true
+include = ["**/*.md", "**/*.py"]
+"""
+    )
+
+    assert data["activation"]["max_cards"] == 3
+    assert data["sources"]["workspace"]["enabled"] is True
+    assert data["sources"]["workspace"]["include"] == ["**/*.md", "**/*.py"]
+
+
+def test_filesystem_connector_respects_size_limit(tmp_path: Path) -> None:
+    (tmp_path / "small.md").write_text("Eureka small visible token", encoding="utf-8")
+    (tmp_path / "large.md").write_text("Eureka large hidden token " * 20, encoding="utf-8")
+
+    result = activate(
+        ActivationRequest(
+            message="Eureka small large token",
+            cwd=tmp_path,
+            max_file_bytes=64,
+        )
+    )
+    sources = [card.source for card in result.cards]
+
+    assert any("small.md" in source for source in sources)
+    assert not any("large.md" in source for source in sources)
+
+
+def test_filesystem_connector_can_be_disabled(tmp_path: Path) -> None:
+    (tmp_path / "memory.md").write_text("Eureka disabled workspace token", encoding="utf-8")
+
+    result = activate(
+        ActivationRequest(
+            message="Eureka disabled workspace token",
+            cwd=tmp_path,
+            workspace_enabled=False,
+        )
+    )
+
+    assert result.cards == []
