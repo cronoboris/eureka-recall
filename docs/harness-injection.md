@@ -102,6 +102,16 @@ codex exec [extra codex args] [agent input content]
 
 Use `--dry-run` to inspect the generated command without running Codex.
 
+## Inspecting Retrieval
+
+After `activate`, `wrap`, `run`, or `codex`, inspect the output folder:
+
+```bash
+eureka inspect --out .eureka
+```
+
+The report summarizes selected cards, connector and authority distribution, top rejected candidates, and warnings such as stale run-log risk or single-connector dominance.
+
 ## Important Boundaries
 
 - Do not paste Eureka context above system or developer instructions.

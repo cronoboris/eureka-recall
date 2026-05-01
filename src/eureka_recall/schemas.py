@@ -49,6 +49,9 @@ class ActivationTrace:
     connectors: list[str]
     selected_ids: list[str]
     rejected_count: int
+    connector_counts: dict[str, int] = field(default_factory=dict)
+    authority_counts: dict[str, int] = field(default_factory=dict)
+    top_rejected: list[dict[str, Any]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)

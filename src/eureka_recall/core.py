@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+from collections import Counter
 import shlex
 import subprocess
 from pathlib import Path
 
 from eureka_recall.connectors import FilesystemConnector, LocalWikiConnector, MemoryConnector
-from eureka_recall.policy import select_hits
-from eureka_recall.schemas import ActivationRequest, ActivationResult, ActivationTrace, MemoryCard
+from eureka_recall.policy import rank_hits, select_hits
+from eureka_recall.schemas import ActivationRequest, ActivationResult, ActivationTrace, MemoryCard, MemoryHit
 from eureka_recall.text import extract_terms
 
 
@@ -24,6 +25,7 @@ def activate(
         hits.extend(connector_hits)
 
     selected = select_hits(hits, request.max_cards)
+    selected_ids = {hit.id for hit in selected}
     cards = [
         MemoryCard(
             id=hit.id,
@@ -49,6 +51,12 @@ def activate(
         connectors=queried,
         selected_ids=[card.id for card in cards],
         rejected_count=max(len(hits) - len(cards), 0),
+        connector_counts=dict(Counter(card.connector for card in cards)),
+        authority_counts=dict(Counter(card.authority for card in cards)),
+        top_rejected=[
+            summarize_hit(hit)
+            for hit in rank_hits([hit for hit in hits if hit.id not in selected_ids])[:10]
+        ],
     )
     return ActivationResult(
         cards=cards,
@@ -61,6 +69,17 @@ def activate(
 def plan_queries(message: str) -> list[str]:
     terms = extract_terms(message)
     return [" ".join(terms[:6])] if terms else [message.strip()]
+
+
+def summarize_hit(hit: MemoryHit) -> dict[str, object]:
+    return {
+        "id": hit.id,
+        "connector": hit.connector,
+        "authority": hit.authority,
+        "title": hit.title,
+        "source": str(hit.source_path),
+        "score": round(hit.score, 3),
+    }
 
 
 def render_bundle(cards: list[MemoryCard]) -> str:

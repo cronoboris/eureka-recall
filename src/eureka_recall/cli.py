@@ -11,6 +11,7 @@ from eureka_recall.core import (
     render_agent_input,
     run_agent_command,
 )
+from eureka_recall.inspect import render_inspection
 from eureka_recall.schemas import ActivationRequest, ActivationResult
 
 
@@ -55,7 +56,14 @@ def main() -> None:
     codex_parser.add_argument("--codex-arg", action="append", default=[])
     codex_parser.add_argument("--dry-run", action="store_true")
 
+    inspect_parser = subparsers.add_parser("inspect", help="inspect a previous Eureka output folder")
+    inspect_parser.add_argument("--out", default=".eureka")
+
     args = parser.parse_args()
+    if args.command == "inspect":
+        print(render_inspection(Path(args.out).expanduser().resolve()), end="")
+        return
+
     if args.command in {"activate", "wrap", "run", "codex"}:
         request = ActivationRequest(
             message=args.message,

@@ -82,6 +82,12 @@ eureka codex \
 
 Use `--dry-run` to print the generated Codex command without executing it.
 
+To inspect what Eureka selected and rejected:
+
+```bash
+eureka inspect --out .eureka
+```
+
 Outputs:
 
 ```text

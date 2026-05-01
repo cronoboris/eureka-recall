@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from eureka_recall.core import activate, build_agent_command, build_codex_command, render_agent_input
+from eureka_recall.inspect import render_inspection_data
 from eureka_recall.schemas import ActivationRequest
 
 
@@ -140,3 +141,67 @@ def test_build_codex_command_embeds_agent_input(tmp_path: Path) -> None:
     assert command.startswith("codex exec ")
     assert "--cd" in command
     assert "hello from eureka" in command
+
+
+def test_activation_trace_includes_inspection_fields(tmp_path: Path) -> None:
+    note = tmp_path / "memory.md"
+    note.write_text("Eureka inspection should explain selected and rejected cards.", encoding="utf-8")
+
+    result = activate(
+        ActivationRequest(
+            message="Eureka inspection selected rejected cards",
+            cwd=tmp_path,
+            max_cards=1,
+        )
+    )
+
+    trace = result.trace.to_dict()
+    assert trace["connector_counts"]
+    assert trace["authority_counts"]
+    assert "top_rejected" in trace
+
+
+def test_render_inspection_data_reports_counts_and_warnings() -> None:
+    report = render_inspection_data(
+        [
+            {
+                "connector": "filesystem",
+                "authority": "current_workspace",
+                "title": "README.md",
+                "relevance": 3.0,
+                "source": "/repo/README.md",
+            }
+        ],
+        {
+            "rejected_count": 2,
+            "connectors": ["filesystem"],
+            "queries": ["eureka"],
+            "connector_counts": {"filesystem": 1},
+            "authority_counts": {"current_workspace": 1},
+            "top_rejected": [
+                {
+                    "connector": "localwiki",
+                    "authority": "canon",
+                    "title": "Rules",
+                    "score": 1.0,
+                    "source": "/wiki/Rules.md",
+                }
+            ],
+        },
+    )
+
+    assert "selected: 1" in report
+    assert "rejected: 2" in report
+    assert "Top Rejected" in report
+    assert "Rules" in report
+
+
+def test_extract_terms_splits_camel_case() -> None:
+    from eureka_recall.text import extract_terms
+
+    terms = extract_terms("SessionSummaryEvidence")
+
+    assert "sessionsummaryevidence" in terms
+    assert "session" in terms
+    assert "summary" in terms
+    assert "evidence" in terms

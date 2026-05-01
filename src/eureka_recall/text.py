@@ -40,11 +40,21 @@ GENERIC_MEMORY_TERMS = {
 
 def extract_terms(text: str) -> list[str]:
     terms = []
-    for match in re.finditer(r"[A-Za-z0-9_\-./가-힣]{2,}", text.lower()):
-        term = match.group(0).strip("./")
-        if term and term not in STOPWORDS:
-            terms.append(term)
+    for match in re.finditer(r"[A-Za-z0-9_\-./가-힣]{2,}", text):
+        raw = match.group(0).strip("./")
+        for part in _term_variants(raw):
+            term = part.lower()
+            if term and term not in STOPWORDS:
+                terms.append(term)
     return list(dict.fromkeys(terms))
+
+
+def _term_variants(term: str) -> list[str]:
+    variants = [term]
+    camel_parts = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", term).split()
+    if len(camel_parts) > 1:
+        variants.extend(camel_parts)
+    return variants
 
 
 def score_text(text: str, terms: list[str]) -> float:
