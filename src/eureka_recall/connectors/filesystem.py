@@ -40,12 +40,12 @@ class FilesystemConnector(MemoryConnector):
         return hits
 
     def _iter_text_files(self, root: Path):
-        ignored = {".git", ".venv", "__pycache__", ".pytest_cache", ".eureka"}
+        ignored = {".git", ".venv", "__pycache__", ".pytest_cache"}
         seen = 0
         for path in root.rglob("*"):
             if seen >= self.max_files:
                 break
-            if any(part in ignored for part in path.parts):
+            if any(part in ignored or part.startswith(".eureka") for part in path.parts):
                 continue
             if not path.is_file():
                 continue
@@ -62,4 +62,3 @@ def _safe_read(path: Path) -> str:
         return path.read_text(encoding="utf-8", errors="ignore")
     except OSError:
         return ""
-

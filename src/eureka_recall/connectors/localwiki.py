@@ -4,7 +4,7 @@ from pathlib import Path
 
 from eureka_recall.connectors.base import MemoryConnector
 from eureka_recall.schemas import ActivationRequest, MemoryHit
-from eureka_recall.text import extract_terms, score_text, snippet_for
+from eureka_recall.text import extract_terms, has_specific_match, score_text, snippet_for
 
 
 class LocalWikiConnector(MemoryConnector):
@@ -34,7 +34,10 @@ class LocalWikiConnector(MemoryConnector):
                 continue
             for path in root.rglob("*.md"):
                 text = _safe_read(path)
-                score = score_text(path.name + "\n" + text, terms)
+                haystack = path.name + "\n" + text
+                if not has_specific_match(haystack, terms):
+                    continue
+                score = score_text(haystack, terms)
                 if score <= 0:
                     continue
                 authority = self._authority_for(path)
@@ -82,4 +85,3 @@ def _freshness_for(path: Path, text: str) -> str | None:
         if line.startswith("updated:") or line.startswith("created:"):
             return line.split(":", 1)[1].strip()
     return None
-

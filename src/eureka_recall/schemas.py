@@ -58,5 +58,5 @@ class ActivationTrace:
 class ActivationResult:
     cards: list[MemoryCard]
     bundle_markdown: str
+    harness_prompt: str
     trace: ActivationTrace
-

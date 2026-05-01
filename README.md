@@ -51,8 +51,11 @@ Outputs:
 ```text
 .eureka/context_cards.json
 .eureka/context_bundle.md
+.eureka/harness_prompt.md
 .eureka/retrieval_trace.json
 ```
+
+`harness_prompt.md` is the default payload to pass into an agent harness before the current user task. It labels selected cards as evidence, not instructions, so the harness can keep system and developer instructions above retrieved context.
 
 ## Design Principles
 
@@ -72,5 +75,5 @@ This repository is an initial scaffold. The first implementation focuses on:
 - LocalWiki connector
 - rule-based activation
 - context card output
+- harness-ready prompt output
 - traceable CLI
-

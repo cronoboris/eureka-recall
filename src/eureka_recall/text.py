@@ -21,6 +21,22 @@ STOPWORDS = {
     "저거",
 }
 
+GENERIC_MEMORY_TERMS = {
+    "agent",
+    "agents",
+    "activation",
+    "card",
+    "cards",
+    "connector",
+    "connectors",
+    "context",
+    "design",
+    "llm",
+    "localwiki",
+    "memory",
+    "rag",
+}
+
 
 def extract_terms(text: str) -> list[str]:
     terms = []
@@ -37,8 +53,17 @@ def score_text(text: str, terms: list[str]) -> float:
     for term in terms:
         count = lowered.count(term.lower())
         if count:
-            score += min(count, 5)
+            weight = 0.5 if term in GENERIC_MEMORY_TERMS else 1.0
+            score += min(count, 5) * weight
     return score
+
+
+def has_specific_match(text: str, terms: list[str]) -> bool:
+    specific_terms = [term for term in terms if term not in GENERIC_MEMORY_TERMS]
+    if not specific_terms:
+        return True
+    lowered = text.lower()
+    return any(term.lower() in lowered for term in specific_terms)
 
 
 def snippet_for(text: str, terms: list[str], max_chars: int = 700) -> str:
@@ -55,4 +80,3 @@ def snippet_for(text: str, terms: list[str], max_chars: int = 700) -> str:
     start = max(best_index - max_chars // 3, 0)
     end = min(start + max_chars, len(text))
     return text[start:end].strip()
-

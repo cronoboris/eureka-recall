@@ -33,6 +33,7 @@ def main() -> None:
         out = Path(args.out).expanduser().resolve()
         out.mkdir(parents=True, exist_ok=True)
         (out / "context_bundle.md").write_text(result.bundle_markdown, encoding="utf-8")
+        (out / "harness_prompt.md").write_text(result.harness_prompt, encoding="utf-8")
         (out / "context_cards.json").write_text(
             json.dumps([card.to_dict() for card in result.cards], ensure_ascii=False, indent=2),
             encoding="utf-8",
@@ -46,4 +47,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
