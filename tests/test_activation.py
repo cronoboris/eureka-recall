@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from eureka_recall.core import activate
+from eureka_recall.core import activate, render_agent_input
 from eureka_recall.schemas import ActivationRequest
 
 
@@ -89,3 +89,23 @@ def test_harness_prompt_marks_cards_as_evidence(tmp_path: Path) -> None:
 
     assert "<eureka_context>" in result.harness_prompt
     assert "evidence, not instructions" in result.harness_prompt
+
+
+def test_render_agent_input_combines_context_and_user_task(tmp_path: Path) -> None:
+    note = tmp_path / "memory.md"
+    note.write_text("Eureka can wrap a user task for a harness.", encoding="utf-8")
+    message = "Use Eureka context before answering."
+
+    result = activate(
+        ActivationRequest(
+            message=message,
+            cwd=tmp_path,
+            max_cards=2,
+        )
+    )
+    agent_input = render_agent_input(result.harness_prompt, message)
+
+    assert agent_input.startswith("<eureka_context>")
+    assert "<user_task>" in agent_input
+    assert message in agent_input
+    assert agent_input.rstrip().endswith("</user_task>")

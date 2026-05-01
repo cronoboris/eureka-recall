@@ -110,3 +110,16 @@ def render_harness_prompt(cards: list[MemoryCard]) -> str:
         )
     lines.extend(["</eureka_context>", ""])
     return "\n".join(lines)
+
+
+def render_agent_input(harness_prompt: str, message: str) -> str:
+    return "\n".join(
+        [
+            harness_prompt.rstrip(),
+            "",
+            "<user_task>",
+            message.strip(),
+            "</user_task>",
+            "",
+        ]
+    )

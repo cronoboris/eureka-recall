@@ -46,16 +46,29 @@ eureka activate \
   --out .eureka
 ```
 
+To build a single harness-ready input file:
+
+```bash
+eureka wrap \
+  --message "Revise this chapter using the current style rules" \
+  --cwd /path/to/project \
+  --localwiki-root /path/to/localwiki \
+  --out .eureka
+```
+
 Outputs:
 
 ```text
 .eureka/context_cards.json
 .eureka/context_bundle.md
 .eureka/harness_prompt.md
+.eureka/agent_input.md
 .eureka/retrieval_trace.json
 ```
 
 `harness_prompt.md` is the default payload to pass into an agent harness before the current user task. It labels selected cards as evidence, not instructions, so the harness can keep system and developer instructions above retrieved context.
+
+`agent_input.md` combines `harness_prompt.md` with the current user task inside a `<user_task>` block.
 
 ## Design Principles
 
