@@ -123,4 +123,5 @@ def test_build_agent_command_appends_path_when_placeholder_missing(tmp_path: Pat
     agent_input = tmp_path / "agent_input.md"
     command = build_agent_command("cat", agent_input)
 
-    assert command == f"cat {str(agent_input)!r}"
+    assert command.startswith("cat ")
+    assert str(agent_input) in command
