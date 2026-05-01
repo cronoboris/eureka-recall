@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "eureka-recall"
+version = "0.1.0"
+description = "Read-only memory activation layer for LLM agents."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "Eureka contributors" }
+]
+keywords = ["llm", "agents", "memory", "rag", "context", "local-first"]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+
+[project.scripts]
+eureka = "eureka_recall.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
