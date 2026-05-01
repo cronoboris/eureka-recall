@@ -136,6 +136,20 @@ def build_agent_command(command_template: str, agent_input_path: Path) -> str:
     return f"{command_template} {quoted_path}"
 
 
+def build_codex_command(
+    agent_input_path: Path,
+    *,
+    mode: str = "exec",
+    codex_bin: str = "codex",
+    extra_args: list[str] | None = None,
+) -> str:
+    args = extra_args or []
+    quoted_input = shlex.quote(agent_input_path.read_text(encoding="utf-8"))
+    quoted_args = " ".join(shlex.quote(arg) for arg in args)
+    prefix = " ".join(part for part in [shlex.quote(codex_bin), mode, quoted_args] if part)
+    return f"{prefix} {quoted_input}"
+
+
 def run_agent_command(command: str) -> int:
     completed = subprocess.run(command, shell=True, check=False)
     return completed.returncode

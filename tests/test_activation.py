@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from eureka_recall.core import activate, build_agent_command, render_agent_input
+from eureka_recall.core import activate, build_agent_command, build_codex_command, render_agent_input
 from eureka_recall.schemas import ActivationRequest
 
 
@@ -125,3 +125,18 @@ def test_build_agent_command_appends_path_when_placeholder_missing(tmp_path: Pat
 
     assert command.startswith("cat ")
     assert str(agent_input) in command
+
+
+def test_build_codex_command_embeds_agent_input(tmp_path: Path) -> None:
+    agent_input = tmp_path / "agent_input.md"
+    agent_input.write_text("<user_task>\nhello from eureka\n</user_task>\n", encoding="utf-8")
+
+    command = build_codex_command(
+        agent_input,
+        codex_bin="codex",
+        extra_args=["--cd", str(tmp_path)],
+    )
+
+    assert command.startswith("codex exec ")
+    assert "--cd" in command
+    assert "hello from eureka" in command

@@ -81,6 +81,27 @@ eureka run \
 
 Eureka only runs the command explicitly passed through `--agent-cmd`; it does not infer or auto-select a harness.
 
+## Codex CLI
+
+Eureka includes a first-party Codex CLI wrapper:
+
+```bash
+eureka codex \
+  --message "$TASK" \
+  --cwd "$PWD" \
+  --localwiki-root "$LOCALWIKI_ROOT" \
+  --codex-arg=--cd \
+  --codex-arg="$PWD"
+```
+
+This builds `agent_input.md` and runs:
+
+```text
+codex exec [extra codex args] [agent input content]
+```
+
+Use `--dry-run` to inspect the generated command without running Codex.
+
 ## Important Boundaries
 
 - Do not paste Eureka context above system or developer instructions.

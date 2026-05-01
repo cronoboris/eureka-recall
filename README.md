@@ -69,6 +69,19 @@ eureka run \
 
 `{agent_input}` is replaced with the generated `.eureka/agent_input.md` path. If the placeholder is omitted, Eureka appends the path as the final argument.
 
+To run Codex CLI directly:
+
+```bash
+eureka codex \
+  --message "Revise this chapter using the current style rules" \
+  --cwd /path/to/project \
+  --localwiki-root /path/to/localwiki \
+  --codex-arg=--cd \
+  --codex-arg=/path/to/project
+```
+
+Use `--dry-run` to print the generated Codex command without executing it.
+
 Outputs:
 
 ```text

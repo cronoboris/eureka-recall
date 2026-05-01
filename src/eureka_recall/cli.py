@@ -4,7 +4,13 @@ import argparse
 import json
 from pathlib import Path
 
-from eureka_recall.core import activate, build_agent_command, render_agent_input, run_agent_command
+from eureka_recall.core import (
+    activate,
+    build_agent_command,
+    build_codex_command,
+    render_agent_input,
+    run_agent_command,
+)
 from eureka_recall.schemas import ActivationRequest, ActivationResult
 
 
@@ -38,8 +44,19 @@ def main() -> None:
         help="Command template. Use {agent_input} for the generated input path.",
     )
 
+    codex_parser = subparsers.add_parser("codex", help="build context and run Codex CLI")
+    codex_parser.add_argument("--message", required=True)
+    codex_parser.add_argument("--cwd", default=".")
+    codex_parser.add_argument("--localwiki-root")
+    codex_parser.add_argument("--max-cards", type=int, default=8)
+    codex_parser.add_argument("--out", default=".eureka")
+    codex_parser.add_argument("--codex-bin", default="codex")
+    codex_parser.add_argument("--mode", choices=["exec"], default="exec")
+    codex_parser.add_argument("--codex-arg", action="append", default=[])
+    codex_parser.add_argument("--dry-run", action="store_true")
+
     args = parser.parse_args()
-    if args.command in {"activate", "wrap", "run"}:
+    if args.command in {"activate", "wrap", "run", "codex"}:
         request = ActivationRequest(
             message=args.message,
             cwd=Path(args.cwd).expanduser().resolve(),
@@ -60,7 +77,18 @@ def main() -> None:
             print(f"Wrote harness input with {len(result.cards)} context cards to {out}")
             return
 
-        command = build_agent_command(args.agent_cmd, agent_input_path)
+        if args.command == "codex":
+            command = build_codex_command(
+                agent_input_path,
+                mode=args.mode,
+                codex_bin=args.codex_bin,
+                extra_args=args.codex_arg,
+            )
+            if args.dry_run:
+                print(command)
+                return
+        else:
+            command = build_agent_command(args.agent_cmd, agent_input_path)
         print(f"Running: {command}", flush=True)
         raise SystemExit(run_agent_command(command))
 
