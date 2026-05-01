@@ -56,6 +56,31 @@ eureka wrap \
   --out .eureka
 ```
 
+## Running a Harness Command
+
+`eureka run` creates the same files as `wrap`, then runs a user-provided command template.
+
+```bash
+eureka run \
+  --message "$TASK" \
+  --cwd "$PWD" \
+  --localwiki-root "$LOCALWIKI_ROOT" \
+  --out .eureka \
+  --agent-cmd "cat {agent_input}"
+```
+
+`{agent_input}` is shell-quoted and replaced with the generated `agent_input.md` path. If the placeholder is omitted, Eureka appends the path as the final argument.
+
+For custom scripts, prefer passing the generated path as an argument:
+
+```bash
+eureka run \
+  --message "$TASK" \
+  --agent-cmd "python scripts/my_harness.py {agent_input}"
+```
+
+Eureka only runs the command explicitly passed through `--agent-cmd`; it does not infer or auto-select a harness.
+
 ## Important Boundaries
 
 - Do not paste Eureka context above system or developer instructions.

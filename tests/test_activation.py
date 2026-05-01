@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from eureka_recall.core import activate, render_agent_input
+from eureka_recall.core import activate, build_agent_command, render_agent_input
 from eureka_recall.schemas import ActivationRequest
 
 
@@ -109,3 +109,18 @@ def test_render_agent_input_combines_context_and_user_task(tmp_path: Path) -> No
     assert "<user_task>" in agent_input
     assert message in agent_input
     assert agent_input.rstrip().endswith("</user_task>")
+
+
+def test_build_agent_command_substitutes_agent_input_path(tmp_path: Path) -> None:
+    agent_input = tmp_path / "agent_input.md"
+    command = build_agent_command("cat {agent_input}", agent_input)
+
+    assert str(agent_input) in command
+    assert "{agent_input}" not in command
+
+
+def test_build_agent_command_appends_path_when_placeholder_missing(tmp_path: Path) -> None:
+    agent_input = tmp_path / "agent_input.md"
+    command = build_agent_command("cat", agent_input)
+
+    assert command == f"cat {str(agent_input)!r}"

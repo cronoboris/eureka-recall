@@ -4,7 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
-from eureka_recall.core import activate, render_agent_input
+from eureka_recall.core import activate, build_agent_command, render_agent_input, run_agent_command
 from eureka_recall.schemas import ActivationRequest, ActivationResult
 
 
@@ -26,8 +26,20 @@ def main() -> None:
     wrap_parser.add_argument("--max-cards", type=int, default=8)
     wrap_parser.add_argument("--out", default=".eureka")
 
+    run_parser = subparsers.add_parser("run", help="build context and run an agent command")
+    run_parser.add_argument("--message", required=True)
+    run_parser.add_argument("--cwd", default=".")
+    run_parser.add_argument("--localwiki-root")
+    run_parser.add_argument("--max-cards", type=int, default=8)
+    run_parser.add_argument("--out", default=".eureka")
+    run_parser.add_argument(
+        "--agent-cmd",
+        required=True,
+        help="Command template. Use {agent_input} for the generated input path.",
+    )
+
     args = parser.parse_args()
-    if args.command in {"activate", "wrap"}:
+    if args.command in {"activate", "wrap", "run"}:
         request = ActivationRequest(
             message=args.message,
             cwd=Path(args.cwd).expanduser().resolve(),
@@ -39,12 +51,18 @@ def main() -> None:
         result = activate(request)
         out = Path(args.out).expanduser().resolve()
         write_activation_outputs(result, out)
-        if args.command == "wrap":
-            agent_input = render_agent_input(result.harness_prompt, args.message)
-            (out / "agent_input.md").write_text(agent_input, encoding="utf-8")
-            print(f"Wrote harness input with {len(result.cards)} context cards to {out}")
-        else:
+        if args.command == "activate":
             print(f"Wrote {len(result.cards)} context cards to {out}")
+            return
+
+        agent_input_path = write_agent_input(result, args.message, out)
+        if args.command == "wrap":
+            print(f"Wrote harness input with {len(result.cards)} context cards to {out}")
+            return
+
+        command = build_agent_command(args.agent_cmd, agent_input_path)
+        print(f"Running: {command}", flush=True)
+        raise SystemExit(run_agent_command(command))
 
 
 def write_activation_outputs(result: ActivationResult, out: Path) -> None:
@@ -59,6 +77,13 @@ def write_activation_outputs(result: ActivationResult, out: Path) -> None:
         json.dumps(result.trace.to_dict(), ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
+
+
+def write_agent_input(result: ActivationResult, message: str, out: Path) -> Path:
+    agent_input = render_agent_input(result.harness_prompt, message)
+    path = out / "agent_input.md"
+    path.write_text(agent_input, encoding="utf-8")
+    return path
 
 
 if __name__ == "__main__":

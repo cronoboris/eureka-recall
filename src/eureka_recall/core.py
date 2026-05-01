@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import shlex
+import subprocess
+from pathlib import Path
+
 from eureka_recall.connectors import FilesystemConnector, LocalWikiConnector, MemoryConnector
 from eureka_recall.policy import select_hits
 from eureka_recall.schemas import ActivationRequest, ActivationResult, ActivationTrace, MemoryCard
@@ -123,3 +127,15 @@ def render_agent_input(harness_prompt: str, message: str) -> str:
             "",
         ]
     )
+
+
+def build_agent_command(command_template: str, agent_input_path: Path) -> str:
+    quoted_path = shlex.quote(str(agent_input_path))
+    if "{agent_input}" in command_template:
+        return command_template.replace("{agent_input}", quoted_path)
+    return f"{command_template} {quoted_path}"
+
+
+def run_agent_command(command: str) -> int:
+    completed = subprocess.run(command, shell=True, check=False)
+    return completed.returncode

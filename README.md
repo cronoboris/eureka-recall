@@ -56,6 +56,19 @@ eureka wrap \
   --out .eureka
 ```
 
+To build the input and immediately run a harness command:
+
+```bash
+eureka run \
+  --message "Revise this chapter using the current style rules" \
+  --cwd /path/to/project \
+  --localwiki-root /path/to/localwiki \
+  --out .eureka \
+  --agent-cmd "cat {agent_input}"
+```
+
+`{agent_input}` is replaced with the generated `.eureka/agent_input.md` path. If the placeholder is omitted, Eureka appends the path as the final argument.
+
 Outputs:
 
 ```text
