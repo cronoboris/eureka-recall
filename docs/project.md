@@ -18,7 +18,7 @@ existing memory stores -> Eureka -> compact context cards -> LLM agent
 
 ## Problem
 
-Tool-calling RAG depends on the main model realizing that context is missing. In long-running work, that is often too late. The model may not know that a project has canon rules, recent user decisions, rejected plot branches, coding conventions, or known failure patterns.
+Tool-calling RAG depends on the main model realizing that context is missing. In long-running work, that is often too late. The model may not know that a project has approved rules, recent architecture decisions, deprecated approaches, coding conventions, or known failure patterns.
 
 Static system prompts are also a poor fit. They are always present, grow stale, and easily become bloated.
 
@@ -36,7 +36,6 @@ Eureka sits between those extremes. It activates a small amount of relevant cont
 
 - Local-first AI agent users.
 - Coding agents that need project rules and prior decisions.
-- Writers using structured project memory.
 - Teams with existing knowledge stores that want better context selection without migrating storage.
 - Agent framework builders who need a recall layer rather than another memory store.
 
@@ -80,4 +79,3 @@ A debug artifact explaining which connectors were queried, what was selected, an
 - The source memory stores remain untouched.
 - Output includes a human-readable context bundle and machine-readable trace.
 - Connector boundaries are clean enough to add a third connector without changing the core.
-

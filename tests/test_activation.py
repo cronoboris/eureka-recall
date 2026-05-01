@@ -22,7 +22,7 @@ def test_activate_selects_workspace_context(tmp_path: Path) -> None:
     assert "style" in result.bundle_markdown.lower()
 
 
-def test_activate_reads_localwiki_without_writing_to_it(tmp_path: Path) -> None:
+def test_activate_reads_localwiki_without_mutating_it(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     workspace.mkdir()
     localwiki = tmp_path / "localwiki"

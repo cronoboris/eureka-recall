@@ -40,7 +40,7 @@ Memory management belongs to your existing systems and human or agent curators. 
 
 ```bash
 eureka activate \
-  --message "Revise this chapter using the current style rules" \
+  --message "Refactor the auth middleware according to current project rules" \
   --cwd /path/to/project \
   --localwiki-root /path/to/localwiki \
   --out .eureka
@@ -50,7 +50,7 @@ To build a single harness-ready input file:
 
 ```bash
 eureka wrap \
-  --message "Revise this chapter using the current style rules" \
+  --message "Refactor the auth middleware according to current project rules" \
   --cwd /path/to/project \
   --localwiki-root /path/to/localwiki \
   --out .eureka
@@ -60,7 +60,7 @@ To build the input and immediately run a harness command:
 
 ```bash
 eureka run \
-  --message "Revise this chapter using the current style rules" \
+  --message "Refactor the auth middleware according to current project rules" \
   --cwd /path/to/project \
   --localwiki-root /path/to/localwiki \
   --out .eureka \
@@ -73,7 +73,7 @@ To run Codex CLI directly:
 
 ```bash
 eureka codex \
-  --message "Revise this chapter using the current style rules" \
+  --message "Refactor the auth middleware according to current project rules" \
   --cwd /path/to/project \
   --localwiki-root /path/to/localwiki \
   --codex-arg=--cd \
@@ -122,3 +122,5 @@ This repository is an initial scaffold. The first implementation focuses on:
 - context card output
 - harness-ready prompt output
 - traceable CLI
+
+See [ROADMAP.md](ROADMAP.md) for the path from scaffold to a stable developer product.
